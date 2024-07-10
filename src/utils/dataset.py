@@ -1,9 +1,10 @@
+import h5py
 import skimage.io as skio
 import numpy as np
 import torch
 
 from torch.utils.data import Dataset, DataLoader
-from src.utils.util import get_coordinate
+from SUPPORT.src.utils.util import get_coordinate
 
 
 def random_transform(input, target, rng, is_rotate=True):
@@ -113,7 +114,7 @@ class DatasetSUPPORT(Dataset):
             indices = []
             tmp_size = noisy_image.size()
             if np.any(tmp_size < np.array(self.patch_size)):
-                raise Exception("patch size is larger than data size")
+                raise Exception(f"patch size {self.patch_size} is larger than data size {tmp_size}")
 
             for k in range(3):
                 z_range = list(range(0, tmp_size[k]-self.patch_size[k]+1, self.patch_interval[k]))
@@ -220,7 +221,7 @@ class DatasetSUPPORT_test_stitch(Dataset):
         return noisy_image, torch.empty(1), single_coordinate
 
 
-def gen_train_dataloader(patch_size, patch_interval, batch_size, noisy_data_list):
+def gen_train_dataloader(patch_size, patch_interval, batch_size, noisy_data_list, flip_signal=False):
     """
     Generate dataloader for training
 
@@ -233,10 +234,18 @@ def gen_train_dataloader(patch_size, patch_interval, batch_size, noisy_data_list
         dataloader_train
     """
     noisy_images_train = []
+    print(f'\n\tTraining model on:')
 
     for noisy_data in noisy_data_list:
-        noisy_image = torch.from_numpy(skio.imread(noisy_data).astype(np.float32)).type(torch.FloatTensor)
-        print(f"Loaded {noisy_data} Shape : {noisy_image.shape}")
+        ############################################# .h5 compatibility
+        with h5py.File(noisy_data, 'r') as f:
+            data = np.array(f['/raw'])
+            raw_green = data[:, :, :, 0]
+            if flip_signal:
+                raw_green = -1*raw_green
+        noisy_image = torch.from_numpy(raw_green.astype(np.float32)).type(torch.FloatTensor)
+        #noisy_image = torch.from_numpy(skio.imread(noisy_data).astype(np.float32)).type(torch.FloatTensor)
+        print(f'\t\t{noisy_data} [{noisy_image.shape}][flip_signal: {flip_signal}]')
         if len(noisy_image.shape) == 2:
             noisy_image = noisy_image.unsqueeze(0)
         T, _, _ = noisy_image.shape

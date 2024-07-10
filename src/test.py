@@ -3,8 +3,8 @@ import torch
 import skimage.io as skio
 
 from tqdm import tqdm
-from src.utils.dataset import DatasetSUPPORT_test_stitch
-from model.SUPPORT import SUPPORT
+from SUPPORT.src.utils.dataset import DatasetSUPPORT_test_stitch
+from SUPPORT.model.SUPPORT import SUPPORT
 
 
 def validate(test_dataloader, model):

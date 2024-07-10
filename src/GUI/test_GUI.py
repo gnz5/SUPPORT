@@ -29,10 +29,9 @@ import numpy as np
 from PIL import Image
 from tifffile import TiffFile
 import tifffile
-from src.utils.dataset_pyqt import DatasetSupport_test_stitch
+from SUPPORT.src.utils.dataset_pyqt import DatasetSupport_test_stitch
 
-from model.SUPPORT import SUPPORT
-
+from SUPPORT.model.SUPPORT import SUPPORT
 
 from PyQt5 import QtWidgets
 
@@ -732,7 +731,7 @@ class SUPPORTGUI(QMainWindow):
 
     def browse_img(self):
         fname = QFileDialog.getOpenFileName(self, "(Load image) Open .tif file", "./")
-        if fname[0].split(".")[-1] not in ["tif", "hdf5"]:
+        if fname[0].split(".")[-1] not in ["tif", "hdf5", "h5"]:
             self.warning("Select .tif file!")
             return True
         else:
@@ -771,6 +770,13 @@ class SUPPORTGUI(QMainWindow):
                     )
                     self.update_img_init()
 
+                    # print(f'type(series): {type(series)}')
+                    # print(f'series.shape: {series.shape}')
+                    # print(f'series.dtype: {series.dtype}')
+                    # print(f'series.axes: {series.axes}')
+                    # print(f'raw_first: {raw_first}')
+                    # print(f'disp_raw: {self.disp_raw}')
+
                 except:
                     self.Label_image.setText("[ERROR] Please check logs.")
                     self.img_path = None
@@ -778,7 +784,7 @@ class SUPPORTGUI(QMainWindow):
                         f"[ERROR] selected tif file seems not a stacked image. Please check file."
                     )
 
-            elif fname[0].split(".")[-1] == "hdf5":
+            elif fname[0].split(".")[-1] == "hdf5" or fname[0].split(".")[-1] == "h5":
                 pass
 
             self.save_header = "/".join(fname[0].split("/")[:-1])

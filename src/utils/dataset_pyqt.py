@@ -2,8 +2,8 @@ import skimage.io as skio
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
-from src.utils.util import get_coordinate
-from src.utils.dataset import DatasetSUPPORT
+from SUPPORT.src.utils.util import get_coordinate
+from SUPPORT.src.utils.dataset import DatasetSUPPORT
 
 
 def normalize(image, mean_image=None, std_image=None):

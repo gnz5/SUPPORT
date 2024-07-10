@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from model.convhole import ConvHole2D
+from SUPPORT.model.convhole import ConvHole2D
 
 class SUPPORT(nn.Module):
     """
@@ -75,7 +75,9 @@ class SUPPORT(nn.Module):
 
         self.last_layers = nn.ModuleList(last_layers)
 
-    def _gen_unet(self):
+        #print(f'self.last_layers: {self.last_layers}')
+
+    def _gen_unet(self): # unet
         # (Unet) encoding layers
         self.enc_layers = []
         for i in range(len(self.mid_channels)):
@@ -100,7 +102,7 @@ class SUPPORT(nn.Module):
                 self.unet_1_convs.append(nn.Conv2d(self.one_by_one_channels[idx-1], c, kernel_size=1, padding=0))
         self.unet_1_convs = nn.ModuleList(self.unet_1_convs)
 
-    def _gen_bsnet(self):
+    def _gen_bsnet(self): # blindspot net
         # (BS) additional parameters
         self.scalars_3x3 = []
         # c_in_first = self.one_by_one_channels[-1] + 1
@@ -226,7 +228,9 @@ class SUPPORT(nn.Module):
             out_convs.append(self.relu)
         self.out_convs = nn.ModuleList(out_convs)
 
-    def forward_unet(self, x):
+        print(out_convs)
+
+    def forward_unet(self, x): # unet
         # x = [b, T, d1, d2]
         # d1, d2 = 512, paper reference
         xs = []
@@ -251,7 +255,7 @@ class SUPPORT(nn.Module):
 
         return x
 
-    def forward_bsnet(self, x, unet_out):
+    def forward_bsnet(self, x, unet_out): # blindspot net
         # x : bsnet input
         # unet_out : unet output
 
@@ -337,9 +341,6 @@ class SUPPORT(nn.Module):
         
         return x
 
-
-
-
 if __name__ == "__main__":
     def weights_init_normalized(m):
         classname = m.__class__.__name__
@@ -375,76 +376,3 @@ if __name__ == "__main__":
 
     plt.imshow(rf)
     plt.show()
-
-
-    if False:
-        import skimage.io as skio
-
-        data = skio.imread("./test_pilhankim.tif")
-        print(data.shape)
-        
-        data[0, 100, 101] = 1000000
-        data[0, 100, 102] = 1000000
-        data[0, 100, 103] = 1000000
-        data[0, 100, 104] = 1000000 # this is horizontal dimension
-
-        import matplotlib.pyplot as plt
-        plt.imshow(data[0, :, :])
-        plt.show()
-
-        
-        def weights_init_normalized(m):
-            classname = m.__class__.__name__
-            # print(classname)
-            if classname.find("Conv2d") != -1:
-                # torch.nn.init.ones_(m.weight)
-                torch.nn.init.constant_(m.weight, 1 / (m.weight.numel() * 1))
-                if m.bias is not None:
-                    torch.nn.init.zeros_(m.bias)
-            elif classname.find("ConvHole2D") != -1:
-                # torch.nn.init.ones_(m.weight)
-                torch.nn.init.constant_(m.weight, 1 / ((m.weight.numel() - m.weight.size(0) * m.weight.size(1)) * 1))
-                if m.bias is not None:
-                    torch.nn.init.zeros_(m.bias)
-
-        ch = 1
-
-        model = SUPPORT(in_channels=ch, mid_channels=[16, 32, 64, 128, 256], depth=5,\
-            blind_conv_channels=4, one_by_one_channels=[32, 16],\
-                    last_layer_channels=[4, 1], bs_size=[1, 1], bp=False)
-
-        model.apply(weights_init_normalized)
-        
-        # print(model)
-
-        import torch
-        a = torch.zeros(1, ch, 128, 128)
-        a[:, ch // 2, 64, 64] = 1000
-        a[:, ch // 2, 64, 65] = 1000
-
-        out = model(a)
-        print(out[0, 0, 64, 64])
-        print(out[0, 0, 64, 65])
-
-        a[:, ch // 2, 64, 64] = 1000
-        a[:, ch // 2, 64, 65] = 100000
-        # a[:, ch // 2, 64, 65] = 2
-        out = model(a)
-        print(out[0, 0, 64, 64])
-        print(out[0, 0, 64, 65])
-
-        a[:, ch // 2, 63, 64] = 2
-        a[:, ch // 2, 64, 64] = 2
-        # a[:, ch // 2 + 1, 64, 65] = 2
-        out = model(a)
-        print(out[0, 0, 64, 64])
-        print(out[0, 0, 64, 65])
-        
-
-        import matplotlib.pyplot as plt
-
-        plt.imshow(out[0, 0, :, :].detach().numpy())
-        plt.show()
-
-
-        pass

@@ -8,9 +8,9 @@ import skimage.io as skio
 
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
-from src.utils.dataset import gen_train_dataloader, random_transform
-from src.utils.util import parse_arguments
-from model.SUPPORT import SUPPORT
+from SUPPORT.src.utils.dataset import gen_train_dataloader, random_transform
+from SUPPORT.src.utils.util import parse_arguments
+from SUPPORT.model.SUPPORT import SUPPORT
 
 
 def train(train_dataloader, model, optimizer, rng, writer, epoch, opt):
@@ -151,7 +151,3 @@ if __name__=="__main__":
         if (opt.checkpoint_interval != -1) and (epoch % opt.checkpoint_interval == 0):
             torch.save(model.state_dict(), opt.results_dir + "/saved_models/%s/model_%d.pth" % (opt.exp_name, epoch))
             torch.save(optimizer.state_dict(), opt.results_dir + "/saved_models/%s/optimizer_%d.pth" % (opt.exp_name, epoch))
-
-        # if (epoch % opt.sample_interval == 0):
-        #     skio.imsave(opt.results_dir + "/images/%s/denoised_%d.pth" % (opt.exp_name, epoch), )
-            
